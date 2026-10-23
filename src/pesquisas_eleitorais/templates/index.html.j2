@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pesquisas eleitorais 2026 — 2º turno</title>
+<meta name="description" content="Dashboard de pesquisas eleitorais do 2º turno de 2026 (Lula × Flávio Bolsonaro), gerado em Python com pandas e Plotly.">
+<style>
+{% include "estilo.css" %}
+</style>
+{{ plotly_js|safe }}
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <defs><clipPath id="lgClip"><rect width="32" height="32" rx="9"/></clipPath></defs>
+      <g clip-path="url(#lgClip)"><rect width="32" height="32" style="fill:var(--flavio)"/><path d="M0 0h32L0 32z" style="fill:var(--lula)"/></g>
+      <path d="M8.5 21.5l5-5.5 3.2 3.2 6-7.2" stroke="#fff" stroke-width="2.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div><div class="brand-name">Pesquisas 2026</div><div class="brand-sub">2º turno · Lula × Flávio</div></div>
+  </div>
+  <nav class="tabs" aria-label="Seções">
+    <button class="tab active" data-tab="geral">Quadro geral</button>
+    <button class="tab" data-tab="instituto">Por instituto</button>
+    <button class="tab" data-tab="tabela">Tabela completa</button>
+  </nav>
+</div></div>
+
+<main class="app">
+  <header class="hero">
+    <span class="eyebrow">Eleições 2026 · Presidente</span>
+    <h1>Pesquisas eleitorais 2026 — 2º turno</h1>
+    <p class="subtitle">Intenção de voto, rejeição e médias mensais · {{ periodo }}</p>
+    <div class="hero-stats">
+      <span class="stat-pill"><b>{{ n_pesquisas }}</b> pesquisas</span>
+      <span class="stat-pill"><b>{{ n_institutos }}</b> institutos</span>
+      <span class="stat-pill">Última: <b>{{ ultima.data }}</b> · {{ ultima.instituto }}</span>
+    </div>
+    <div class="hero-links">
+      <a class="chip" href="data/pesquisas.csv" download>Baixar CSV</a>
+      <a class="chip" href="{{ repo_url }}" target="_blank" rel="noopener">Código no GitHub</a>
+    </div>
+  </header>
+
+  <!-- =================== QUADRO GERAL =================== -->
+  <div id="tab-geral">
+
+    <section class="panel">
+      <div class="ph"><div><span class="eyebrow">Médias mensais</span><h2>Intenção de voto</h2>
+        <div class="psub">2º turno · Lula × Flávio, com a linha de Nulo/Branco/NS em eixo próprio</div></div></div>
+      <div class="kpis">
+        {% for k in kpis_intencao %}
+        <div class="kpi"><div class="kpi-label"><i class="dot {{ k.dot }}"></i>{{ k.rotulo }}</div>
+          <div class="kpi-val {{ k.classe }}">{{ k.valor }}</div><div class="kpi-delta">{{ k.sub }}</div></div>
+        {% endfor %}
+      </div>
+      <div class="legend">
+        <span><i class="dot bg-lula"></i>Lula</span>
+        <span><i class="dot bg-flavio"></i>Flávio</span>
+        <span><i class="dot bg-nulo"></i>Nulo/Branco/NS (eixo à direita)</span>
+      </div>
+      <div class="grafico">{{ fig_intencao|safe }}</div>
+    </section>
+
+    <section class="panel">
+      <div class="ph">
+        <div><span class="eyebrow">Placar</span><h2>Placar mensal de intenção</h2>
+          <div class="psub">Pesquisas com vantagem fora da margem de erro</div></div>
+        <div class="ph-tools">
+          <button class="chip active" data-vista="pv" data-alvo="mes">Por mês</button>
+          <button class="chip" data-vista="pv" data-alvo="todos">Todos os meses</button>
+        </div>
+      </div>
+      <div id="pv-mes">
+        <select class="select" id="sel-pv" aria-label="Mês">
+          {% for c in placar_intencao %}<option value="{{ c.mes_nome }}"{% if loop.last %} selected{% endif %}>{{ c.mes_nome }}</option>{% endfor %}
+        </select>
+        {% for c in placar_intencao %}
+        <div class="placar-row view-gap" data-grupo="pv" data-chave="{{ c.mes_nome }}">
+          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no mês</small></div></div>
+          <div class="placar-card pc-emp"><div class="placar-num">{{ c.empate }}</div><div class="placar-label">Empate técnico<small>dentro da margem de erro</small></div></div>
+          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no mês</small></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div id="pv-todos" hidden><div class="grafico">{{ fig_placar_intencao|safe }}</div></div>
+    </section>
+
+    <section class="panel">
+      <div class="ph"><div><span class="eyebrow">Médias mensais</span><h2>Rejeição</h2>
+        <div class="psub">Quem os eleitores dizem que não votariam de jeito nenhum</div></div></div>
+      <div class="kpis">
+        {% for k in kpis_rejeicao %}
+        <div class="kpi"><div class="kpi-label"><i class="dot {{ k.dot }}"></i>{{ k.rotulo }}</div>
+          <div class="kpi-val {{ k.classe }}">{{ k.valor }}</div><div class="kpi-delta">{{ k.sub }}</div></div>
+        {% endfor %}
+      </div>
+      <div class="legend">
+        <span><i class="dot bg-lula"></i>Rejeição Lula</span>
+        <span><i class="dot bg-flavio"></i>Rejeição Flávio</span>
+      </div>
+      <div class="grafico">{{ fig_rejeicao|safe }}</div>
+    </section>
+
+    <section class="panel">
+      <div class="ph">
+        <div><span class="eyebrow">Placar</span><h2>Placar de rejeição</h2>
+          <div class="psub">Quem aparece mais rejeitado, dentro da margem de erro</div></div>
+        <div class="ph-tools">
+          <button class="chip active" data-vista="pr" data-alvo="mes">Por mês</button>
+          <button class="chip" data-vista="pr" data-alvo="todos">Todos os meses</button>
+        </div>
+      </div>
+      <div id="pr-mes">
+        <select class="select" id="sel-pr" aria-label="Mês">
+          {% for c in placar_rejeicao %}<option value="{{ c.mes_nome }}"{% if loop.last %} selected{% endif %}>{{ c.mes_nome }}</option>{% endfor %}
+        </select>
+        {% for c in placar_rejeicao %}
+        <div class="placar-row view-gap" data-grupo="pr" data-chave="{{ c.mes_nome }}">
+          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no mês</small></div></div>
+          <div class="placar-card pc-emp"><div class="placar-num">{{ c.empate }}</div><div class="placar-label">Empate técnico<small>dentro da margem de erro</small></div></div>
+          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no mês</small></div></div>
+        </div>
+        {% endfor %}
+      </div>
+      <div id="pr-todos" hidden><div class="grafico">{{ fig_placar_rejeicao|safe }}</div></div>
+    </section>
+
+    <section class="panel">
+      <div class="ph"><div><span class="eyebrow">Linha do tempo</span><h2>Evolução das pesquisas</h2>
+        <div class="psub">Cada ponto é uma pesquisa, posicionada pelo último dia de campo</div></div></div>
+      <div class="toolbar">
+        <div class="grp" role="group" aria-label="Camadas">
+          <span class="grp-label">Camadas</span>
+          <button class="chip sm" data-camada="tendencia">Tendência linear</button>
+          <button class="chip sm" data-camada="mediaMovel">Média móvel (3)</button>
+          <button class="chip sm" data-camada="vantagem">Destaque de vantagem</button>
+          <button class="chip sm" data-camada="faixaMensal">Faixa mensal</button>
+        </div>
+      </div>
+      <div class="zoom-strip" role="group" aria-label="Zoom por mês">
+        <span class="grp-label">Ir para</span>
+        {% for nome in zoom_nomes %}<button class="chip sm" data-zoom="{{ nome }}">{{ nome }}</button>{% endfor %}
+      </div>
+      <div class="legend">
+        <span><i class="dot bg-lula"></i>Lula</span>
+        <span><i class="dot bg-flavio"></i>Flávio</span>
+      </div>
+      <div class="grafico">{{ fig_evolucao|safe }}</div>
+      <p class="hint">Arraste sobre o gráfico para ampliar uma área · clique duas vezes para voltar à visão completa · passe o mouse sobre um ponto para ver o instituto.</p>
+    </section>
+
+  </div>
+
+  <!-- =================== POR INSTITUTO =================== -->
+  <div id="tab-instituto" hidden>
+    <select class="select grande" id="sel-instituto" aria-label="Instituto">
+      {% for i in institutos %}<option value="{{ i.nome }}">{{ i.nome }}</option>{% endfor %}
+    </select>
+
+    {% for i in institutos %}
+    <div class="kpis sm" data-grupo="inst" data-chave="{{ i.nome }}"{% if not loop.first %} hidden{% endif %}>
+      {% for k in i.kpis %}
+      <div class="kpi"><div class="kpi-label"><i class="dot {{ k.dot }}"></i>{{ k.rotulo }}</div><div class="kpi-val {{ k.classe }}">{{ k.valor }}</div></div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    <section class="panel">
+      <div class="ph"><div><span class="eyebrow">Evolução por pesquisa</span><h2>Por instituto</h2><div class="psub">Escolha o instituto para ver o histórico completo de intenção de voto e rejeição</div></div></div>
+      <div class="legend">
+        <span><i class="dot bg-lula"></i>Lula</span>
+        <span><i class="dot bg-flavio"></i>Flávio</span>
+        <span><i class="dot bg-nulo"></i>Nulo/Branco/NS (eixo à direita)</span>
+      </div>
+      <div class="grafico">{{ fig_instituto|safe }}</div>
+    </section>
+  </div>
+
+  <!-- =================== TABELA COMPLETA =================== -->
+  <div id="tab-tabela" hidden>
+    <p class="psub" style="margin-bottom:14px">Dados lidos de <code>data/pesquisas.csv</code>. <a href="data/pesquisas.csv" download>Baixar CSV</a> · <a href="data/medias_mensais.csv" download>Baixar médias mensais</a></p>
+    {% for m in tabelas %}
+    <section class="panel">
+      <div class="tbl-head"><h2>{{ m.mes_nome }}</h2><span>{{ m.n }} {{ 'pesquisa' if m.n == 1 else 'pesquisas' }}</span></div>
+      <div class="tbl-wrap">
+        <table class="full">
+          <thead><tr><th>Data</th><th>Instituto</th><th>Lula</th><th>Flávio</th><th>Nulo/NS</th><th>Rej. Lula</th><th>Rej. Flávio</th><th>Erro</th></tr></thead>
+          <tbody>
+            {% for r in m.linhas %}
+            <tr>
+              <td>{{ r.data }}</td><td style="font-weight:500">{{ r.instituto }}</td>
+              <td>{% if r.lula is not none %}<div class="bar-cell"><div class="bar lula-bar" style="width:{{ r.lula_w }}px"></div>{{ r.lula }}%</div>{% else %}—{% endif %}</td>
+              <td>{% if r.flavio is not none %}<div class="bar-cell"><div class="bar flavio-bar" style="width:{{ r.flavio_w }}px"></div>{{ r.flavio }}%</div>{% else %}—{% endif %}</td>
+              <td>{{ r.nulo ~ '%' if r.nulo is not none else '—' }}</td>
+              <td>{{ r.rej_lula ~ '%' if r.rej_lula is not none else '—' }}</td>
+              <td>{{ r.rej_flavio ~ '%' if r.rej_flavio is not none else '—' }}</td>
+              <td style="white-space:nowrap">±{{ r.erro }}pp {% if r.badge %}<span class="badge {{ r.badge.classe }}">{{ r.badge.texto }}</span>{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr class="media-row"><td colspan="2">Média {{ m.mes_nome }}</td><td>{{ m.media.lula }}%</td><td>{{ m.media.flavio }}%</td><td>{{ m.media.nulo }}%</td><td>{{ m.media.rej_lula }}%</td><td>{{ m.media.rej_flavio }}%</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endfor %}
+  </div>
+
+  <footer class="rodape">
+    <span>Gerado em {{ gerado_em }} com Python (pandas + Plotly + Jinja2). Dados em <a href="data/pesquisas.csv">CSV</a>.</span>
+    <span>Projeto pessoal, sem vínculo com institutos, veículos ou campanhas.</span>
+  </footer>
+</main>
+
+<script>
+/* JavaScript mínimo: navegação e aplicação das configurações calculadas em Python.
+   Nenhum cálculo ou gráfico é feito aqui. */
+const EVO = {{ evo_cfg|tojson }};
+const INST = {{ inst_cfg|tojson }};
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+function redimensionar() {
+  $$('.js-plotly-plot').forEach(gd => { if (gd.offsetParent !== null) Plotly.Plots.resize(gd); });
+}
+
+// abas
+$$('.tab').forEach(btn => btn.addEventListener('click', () => {
+  $$('.tab').forEach(b => b.classList.toggle('active', b === btn));
+  ['geral', 'instituto', 'tabela'].forEach(t => { $('#tab-' + t).hidden = t !== btn.dataset.tab; });
+  redimensionar();
+}));
+
+// selects que mostram um bloco por vez (placares por mês e cards de instituto)
+function ligarSelect(selId, grupo, aoMudar) {
+  const sel = document.getElementById(selId);
+  const aplicar = () => {
+    $$('[data-grupo="' + grupo + '"]').forEach(el => { el.hidden = el.dataset.chave !== sel.value; });
+    if (aoMudar) aoMudar(sel.value);
+  };
+  sel.addEventListener('change', aplicar);
+  aplicar();
+}
+ligarSelect('sel-pv', 'pv');
+ligarSelect('sel-pr', 'pr');
+ligarSelect('sel-instituto', 'inst', nome => {
+  const c = INST[nome];
+  Plotly.update('graf-instituto', { visible: c.visible }, c.layout);
+});
+
+// placar: "por mês" x "todos os meses"
+$$('[data-vista]').forEach(btn => btn.addEventListener('click', () => {
+  const v = btn.dataset.vista;
+  $$('[data-vista="' + v + '"]').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById(v + '-mes').hidden = btn.dataset.alvo !== 'mes';
+  document.getElementById(v + '-todos').hidden = btn.dataset.alvo !== 'todos';
+  redimensionar();
+}));
+
+// evolução: camadas (tendência, média móvel, vantagem, faixa mensal)
+const evo = document.getElementById('graf-evolucao');
+$$('[data-camada]').forEach(btn => {
+  const cfg = EVO.camadas[btn.dataset.camada];
+  btn.classList.toggle('active', EVO.ativas.includes(btn.dataset.camada));
+  btn.addEventListener('click', () => {
+    const ligar = !btn.classList.contains('active');
+    btn.classList.toggle('active', ligar);
+    if (cfg.mostrar.length) Plotly.restyle(evo, { visible: ligar }, cfg.mostrar);
+    if (cfg.ocultar.length) Plotly.restyle(evo, { visible: !ligar }, cfg.ocultar);
+  });
+});
+
+// evolução: zoom por mês
+function marcarZoom(nome) { $$('[data-zoom]').forEach(b => b.classList.toggle('active', b.dataset.zoom === nome)); }
+$$('[data-zoom]').forEach(btn => btn.addEventListener('click', () => {
+  Plotly.relayout(evo, EVO.zoom[btn.dataset.zoom]);
+  marcarZoom(btn.dataset.zoom);
+}));
+marcarZoom('Tudo');
+evo.on('plotly_relayout', ev => {
+  if (ev['xaxis.autorange']) { Plotly.relayout(evo, EVO.zoom['Tudo']); marcarZoom('Tudo'); }  // duplo clique
+  else if (ev['xaxis.range[0]'] !== undefined) marcarZoom(null);                              // zoom por arraste
+});
+</script>
+</body>
+</html>

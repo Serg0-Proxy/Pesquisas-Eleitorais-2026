@@ -1,0 +1,14 @@
+# Ambiente virtual e cache do Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Site gerado (é um artefato de build — o `deploy.yml` o gera e publica sozinho)
+site/
+
+.DS_Store
+Thumbs.db
