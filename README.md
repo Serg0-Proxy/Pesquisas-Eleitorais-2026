@@ -6,7 +6,7 @@ Dashboard online: https://serg0-proxy.github.io/Pesquisas-Eleitorais-2026/
 
 ## Dados
 
-Um único arquivo, `data/pesquisas.csv`, com uma pesquisa por linha: 181 pesquisas de 18 institutos, de janeiro a outubro de 2026.
+Um único arquivo, `data/pesquisas.csv`, com uma pesquisa por linha: 187 pesquisas de 20 institutos, de janeiro a outubro de 2026.
 
 | Coluna | Descrição |
 |--------|-----------|

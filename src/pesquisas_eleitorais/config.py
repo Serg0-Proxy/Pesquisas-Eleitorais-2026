@@ -38,6 +38,11 @@ PERIODO_EXIBIDO = "Jan–Out 2026"  # texto do subtítulo (a coleta segue até o
 #   - GERP, 19-21/10/2026 (BR-03835/2026) — fonte somou 99 (50 + 45 + 2 nenhum + 2 NS/NR,
 #     arredondamento); nulo ajustado para 5 para fechar 100 (lula/flavio intactos)
 #   - Indexa/Broadcast, 20-21/10/2026 (BR-02348/2026) — rejeição não saiu; nulo=10,7 (100 - 44,1 - 45,2)
+#   - MDA/CNT, 21-23/10/2026 (BR-02136/2026): rejeição não achada nas matérias; nulo=8,7 (5,8 + 2,9)
+#   - Instituto França, 21-23/10/2026 (BR-04863/2026): sem rejeição; nulo=11,3 (100 - 45,6 - 43,1)
+#   - Veritá, 18-22/10/2026 (BR-06070/2026): sem rejeição; nulo=2,3 (1,4 + 0,9); instituto novo. As rodadas
+#     de 12-16/10 e 15-19/10 (BR-06396/2026) só divulgaram votos válidos (51,1/48,9 e 50,7/49,3), sem
+#     totais, e NÃO foram adicionadas
 # Observações de dados (sem rejeição pendente):
 #   - Real Time Big Data, 19-22/10/2026 (BR-09670/2026): totais 49/45 (nulo=6) conferidos na Transmissão
 #     Política; válidos 52/48 (Poder360). Rejeição 36/33 ("não votaria") do Poder360 — nível bem abaixo
@@ -185,6 +190,8 @@ INSTITUTOS = (
     "Instituto França",
     "Ipespe",
     "DataTrends",
+    "Alfa Inteligência",
+    "Veritá",
 )
 
 # Variações comuns (em minúsculas) aceitas apenas no comando `adicionar`,
@@ -206,6 +213,9 @@ ALIASES = {
     "franca": "Instituto França",
     "ipespe/abrapel": "Ipespe",
     "datatrends": "DataTrends",
+    "alfa": "Alfa Inteligência",
+    "alfa inteligencia": "Alfa Inteligência",
+    "verita": "Veritá",
     "atlasintel": "Atlas/Intel",
     "futura": "Futura/Apex",
     "ideia": "Meio/Ideia",
