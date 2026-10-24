@@ -1,4 +1,4 @@
-# Ambiente virtual e cache do Python
+# Ambiente virtual e cache
 .venv/
 venv/
 __pycache__/
@@ -7,7 +7,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-# Site gerado (é um artefato de build — o `deploy.yml` o gera e publica sozinho)
+# Site gerado (o deploy.yml cria e publica sozinho)
 site/
 
 .DS_Store

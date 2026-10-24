@@ -39,8 +39,8 @@
       <span class="stat-pill">Última: <b>{{ ultima.data }}</b> · {{ ultima.instituto }}</span>
     </div>
     <div class="hero-links">
-      <a class="chip" href="data/pesquisas.csv" download>Baixar CSV</a>
-      <a class="chip" href="{{ repo_url }}" target="_blank" rel="noopener">Código no GitHub</a>
+      <a class="chip" href="{{ csv_uri }}" download="pesquisas.csv">Baixar CSV</a>
+      <a class="chip" href="{{ repo_url }}" target="_blank" rel="noopener noreferrer">Código no GitHub</a>
     </div>
   </header>
 
@@ -48,7 +48,7 @@
   <div id="tab-geral">
 
     <section class="panel">
-      <div class="ph"><div><span class="eyebrow">Médias mensais</span><h2>Intenção de voto</h2>
+      <div class="ph"><div><span class="eyebrow">Médias mensais · outubro por semana</span><h2>Intenção de voto</h2>
         <div class="psub">2º turno · Lula × Flávio, com a linha de Nulo/Branco/NS em eixo próprio</div></div></div>
       <div class="kpis">
         {% for k in kpis_intencao %}
@@ -89,7 +89,7 @@
     </section>
 
     <section class="panel">
-      <div class="ph"><div><span class="eyebrow">Médias mensais</span><h2>Rejeição</h2>
+      <div class="ph"><div><span class="eyebrow">Médias mensais · outubro por semana</span><h2>Rejeição</h2>
         <div class="psub">Quem os eleitores dizem que não votariam de jeito nenhum</div></div></div>
       <div class="kpis">
         {% for k in kpis_rejeicao %}
@@ -181,7 +181,7 @@
 
   <!-- =================== TABELA COMPLETA =================== -->
   <div id="tab-tabela" hidden>
-    <p class="psub" style="margin-bottom:14px">Dados lidos de <code>data/pesquisas.csv</code>. <a href="data/pesquisas.csv" download>Baixar CSV</a> · <a href="data/medias_mensais.csv" download>Baixar médias mensais</a></p>
+    <p class="psub" style="margin-bottom:14px">Dados lidos de <code>data/pesquisas.csv</code>. <a href="{{ csv_uri }}" download="pesquisas.csv">Baixar CSV</a> · <a href="{{ medias_uri }}" download="medias_mensais.csv">Baixar médias mensais</a></p>
     {% for m in tabelas %}
     <section class="panel">
       <div class="tbl-head"><h2>{{ m.mes_nome }}</h2><span>{{ m.n }} {{ 'pesquisa' if m.n == 1 else 'pesquisas' }}</span></div>
@@ -209,7 +209,7 @@
   </div>
 
   <footer class="rodape">
-    <span>Gerado em {{ gerado_em }} com Python (pandas + Plotly + Jinja2). Dados em <a href="data/pesquisas.csv">CSV</a>.</span>
+    <span>Gerado em {{ gerado_em }} com Python (pandas + Plotly + Jinja2). Dados em <a href="{{ csv_uri }}" download="pesquisas.csv">CSV</a>.</span>
     <span>Projeto pessoal, sem vínculo com institutos, veículos ou campanhas.</span>
   </footer>
 </main>
@@ -219,12 +219,23 @@
    Nenhum cálculo ou gráfico é feito aqui. */
 const EVO = {{ evo_cfg|tojson }};
 const INST = {{ inst_cfg|tojson }};
+const GUIA = {{ cores_guia|tojson }};
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 function redimensionar() {
   $$('.js-plotly-plot').forEach(gd => { if (gd.offsetParent !== null) Plotly.Plots.resize(gd); });
 }
+
+// linha-guia do hover: cor definida em Python (config.py); aqui só escolhemos a do tema atual
+const temaEscuro = matchMedia('(prefers-color-scheme: dark)');
+function aplicarGuia() {
+  const cor = temaEscuro.matches ? GUIA.escuro : GUIA.claro;
+  ['graf-intencao', 'graf-rejeicao'].forEach(id => Plotly.relayout(id, { 'xaxis.spikecolor': cor }));
+  Plotly.relayout('graf-instituto', { 'xaxis.spikecolor': cor, 'xaxis2.spikecolor': cor });
+}
+aplicarGuia();
+temaEscuro.addEventListener('change', aplicarGuia);
 
 // abas
 $$('.tab').forEach(btn => btn.addEventListener('click', () => {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date, timedelta
 from pathlib import Path
 
 ANO = 2026
@@ -38,6 +39,11 @@ PERIODO_EXIBIDO = "Jan–Out 2026"  # texto do subtítulo (a coleta segue até o
 #     arredondamento); nulo ajustado para 5 para fechar 100 (lula/flavio intactos)
 #   - Indexa/Broadcast, 20-21/10/2026 (BR-02348/2026) — rejeição não saiu; nulo=10,7 (100 - 44,1 - 45,2)
 # Observações de dados (sem rejeição pendente):
+#   - Real Time Big Data, 19-22/10/2026 (BR-09670/2026): totais 49/45 (nulo=6) conferidos na Transmissão
+#     Política; válidos 52/48 (Poder360). Rejeição 36/33 ("não votaria") do Poder360 — nível bem abaixo
+#     das outras pesquisas, reconferir a pergunta/metodologia
+#   - VOX, 20-22/10/2026 (BR-03259/2026): nulo=10,3 (6,0 nenhum/branco/nulo + 4,3 NS/NR); válidos 50,6/49,4
+#     batem; rejeição Lula 44,8 / Flávio 47,1 (Poder360, Bahia Notícias)
 #   - Palver, 18-20/10/2026: fonte somou 99 (branco/nulo 1); nulo ajustado para 2 (lula/flavio intactos)
 #   - Futura/Apex, 16-17/10/2026 (BR-06715/2026): fonte somou 100,1 (nulo 2,4 + indecisos 1,9); nulo
 #     ajustado para 4,2 (lula/flavio intactos)
@@ -53,7 +59,7 @@ PERIODO_EXIBIDO = "Jan–Out 2026"  # texto do subtítulo (a coleta segue até o
 #   - Datafolha, 20-22/10/2026 (BR-09709/2026): nulo=7 (100 - 47 - 46); rejeição 48/48 (Terra/UOL)
 CSV_PADRAO = Path("data/pesquisas.csv")
 SAIDA_PADRAO = Path("site")
-REPO_URL_PADRAO = "https://github.com/SEU-USUARIO/pesquisas-eleitorais-2026"
+REPO_URL_PADRAO = "https://github.com/Serg0-Proxy/Pesquisas-Eleitorais-2026"
 
 # ---------------------------------------------------------------------------
 # Esquema do CSV (uma linha = uma pesquisa de 2º turno)
@@ -117,6 +123,47 @@ MESES_NOME = dict(
 )
 
 # ---------------------------------------------------------------------------
+# Períodos dos gráficos de MÉDIA GERAL (intenção e rejeição)
+# ---------------------------------------------------------------------------
+# Nesses dois gráficos, outubro não usa "Out1/Out2": vira uma barra por SEMANA, e cada semana
+# é identificada pelo domingo que a encerra (1º domingo = 04/10, dia do 1º turno; 2º = 11/10;
+# 3º = 18/10; 4º = 25/10, dia do 2º turno). Ex.: o "2º domingo" reúne as pesquisas de 05 a 11/10.
+# Os demais meses seguem como mês civil. O placar, a tabela e o zoom continuam com Out1/Out2.
+MES_OUTUBRO = 10
+MAX_DOMINGOS = 5  # outubro de 2026 tem quatro; o quinto só existiria com dias 26–31 (nunca usado)
+
+
+def domingos_de_outubro(ano: int = ANO) -> tuple[date, ...]:
+    """Os domingos de outubro do ano, em ordem (2026: 04, 11, 18 e 25)."""
+    d = date(ano, MES_OUTUBRO, 1)
+    d += timedelta(days=(6 - d.weekday()) % 7)
+    domingos = []
+    while d.month == MES_OUTUBRO:
+        domingos.append(d)
+        d += timedelta(days=7)
+    return tuple(domingos)
+
+
+def periodo_geral(dia: date) -> str:
+    """Código do período das médias gerais: mês civil, ou "Dom1".."Dom5" em outubro."""
+    if dia.month != MES_OUTUBRO:
+        return MESES_CALENDARIO[dia.month - 1]
+    domingo = dia + timedelta(days=(6 - dia.weekday()) % 7)  # domingo que encerra a semana
+    primeiro = domingos_de_outubro(dia.year)[0]
+    return f"Dom{(domingo - primeiro).days // 7 + 1}"
+
+
+PERIODOS_GERAIS = (
+    *MESES_CALENDARIO[:9],
+    *(f"Dom{i}" for i in range(1, MAX_DOMINGOS + 1)),
+    *MESES_CALENDARIO[10:],
+)
+_NOMES_DOMINGO = {
+    f"Dom{i + 1}": f"{i + 1}º domingo ({d:%d/%m})" for i, d in enumerate(domingos_de_outubro())
+}  # o 5º domingo (01/11) cai em novembro e não é usado em 2026
+PERIODOS_GERAIS_NOME = {c: MESES_NOME[c] for c in MESES_CALENDARIO if c in MESES_NOME} | _NOMES_DOMINGO
+
+# ---------------------------------------------------------------------------
 # Institutos: apenas as formas canônicas são aceitas no CSV
 # ---------------------------------------------------------------------------
 INSTITUTOS = (
@@ -173,4 +220,15 @@ COR_FLAVIO = "#2563eb"
 COR_NULO = "#94a3b8"
 COR_TEXTO = "#64748b"
 COR_GRADE = "rgba(148, 163, 184, 0.25)"
+# Caixinha de informações ao passar o mouse (e caixinhas dos gráficos): fundo OPACO, em um cinza-azulado
+# suave que se destaca do fundo do card nos dois temas, com texto claro.
+HOVER_FUNDO = "#2b3a52"
+HOVER_BORDA = "rgba(255, 255, 255, 0.22)"
+HOVER_TEXTO = "#f1f5f9"
+HOVER_LULA = "#fca5a5"  # tons claros de Lula/Flávio para ler bem sobre o fundo da caixinha
+HOVER_FLAVIO = "#93c5fd"
+# Linha-guia vertical do hover: fina, sutil e branca no tema escuro (cinza-azulada no claro,
+# onde o branco sumiria). O HTML só troca entre as duas conforme o tema do navegador.
+COR_GUIA_ESCURO = "rgba(255, 255, 255, 0.45)"
+COR_GUIA_CLARO = "rgba(71, 85, 105, 0.45)"
 FONTE = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"

@@ -1,5 +1,5 @@
-# Dependências de execução (o pyproject.toml é a fonte principal: pip install -e ".[dev]")
 pandas>=2.0
 numpy>=1.24
 plotly>=5.18
 jinja2>=3.1
+-e .

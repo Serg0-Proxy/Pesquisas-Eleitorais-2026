@@ -160,3 +160,41 @@ def test_media_de_rejeicao_usa_a_ultima_pesquisa_do_instituto_que_tenha_rejeicao
     assert jan["n_rejeicao"] == 2  # Datafolha (10/01) e Quaest (15/01)
     assert jan["rej_lula"] == 48.0  # (50 + 46) / 2
     assert jan["rej_flavio"] == 46.0  # (40 + 52) / 2
+
+
+def test_periodo_geral_divide_outubro_por_domingo() -> None:
+    from datetime import date
+
+    from pesquisas_eleitorais.config import domingos_de_outubro, periodo_geral
+
+    assert [d.day for d in domingos_de_outubro(2026)] == [4, 11, 18, 25]
+    esperado = {1: "Dom1", 4: "Dom1", 5: "Dom2", 11: "Dom2", 12: "Dom3", 18: "Dom3", 19: "Dom4", 25: "Dom4"}
+    for dia, periodo in esperado.items():
+        assert periodo_geral(date(2026, 10, dia)) == periodo
+    assert periodo_geral(date(2026, 9, 30)) == "Set"
+
+
+def test_medias_periodos_usa_uma_pesquisa_por_instituto_em_cada_semana() -> None:
+    from pesquisas_eleitorais.metrics import medias_periodos
+
+    nan = float("nan")
+    df = pd.DataFrame(
+        {
+            "data": pd.to_datetime(["2026-10-06", "2026-10-10", "2026-10-13"]),
+            "ord": [1, 2, 3],
+            "mes": ["Out2"] * 3,
+            "periodo": ["Dom2", "Dom2", "Dom3"],
+            "instituto": ["Datafolha", "Datafolha", "Datafolha"],
+            "lula": [40.0, 44.0, 46.0],
+            "flavio": [40.0, 46.0, 45.0],
+            "nulo": [20.0, 10.0, 9.0],
+            "rej_lula": [50.0, nan, 48.0],
+            "rej_flavio": [40.0, nan, 46.0],
+            "margem_erro": [2.0] * 3,
+        }
+    )
+    med = medias_periodos(df).set_index("mes")
+    assert list(med.index) == ["Dom2", "Dom3"]
+    assert med.loc["Dom2", "lula"] == 44.0  # só a de 10/10 entra na semana
+    assert med.loc["Dom2", "rej_lula"] == 50.0  # rejeição: a mais recente da semana COM rejeição
+    assert med.loc["Dom3", "n_intencao"] == 1

@@ -11,7 +11,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-from .config import MESES, MESES_NOME
+from .config import MESES, MESES_NOME, PERIODOS_GERAIS, PERIODOS_GERAIS_NOME
 
 Tipo = Literal["intencao", "rejeicao"]
 Vantagem = Literal["lula", "flavio", "empate"]
@@ -40,31 +40,17 @@ def media_meio_para_cima(valores: Iterable[float], casas: int = 1) -> float:
 
 
 # ---------------------------------------------------------------------------
-# LEMBRETE IMPORTANTE — regra da média mensal (pedido explícito do usuário)
+# LEMBRETE IMPORTANTE: regra da média
 #
-# Se um instituto publicar MAIS DE UMA pesquisa no mesmo mês (ou no mesmo "Out1"/"Out2",
-# já que outubro é dividido em dois — ver mes_da_data em config.py), a média mensal usa
-# SÓ A PESQUISA MAIS RECENTE desse instituto naquele mês/período. As pesquisas mais
-# antigas do mesmo instituto no mesmo mês NÃO entram na soma nem na média — é como se
-# não existissem para esse cálculo (mas continuam valendo normalmente para o placar e
-# para a tabela completa, que olham pesquisa por pesquisa, não por instituto).
+# Se um instituto publicar mais de uma pesquisa no mesmo período (mês, Out1/Out2 ou semana de
+# outubro nos gráficos gerais), só a mais recente dele entra na média. As outras continuam
+# valendo no placar e na tabela completa, que contam pesquisa por pesquisa.
 #
-# Isso é feito por _ultima_pesquisa_por_instituto(), logo abaixo, chamada de dentro de
-# medias_mensais(). Não mude essa função para incluir todas as pesquisas do mês sem
-# querer — isso quebraria essa regra.
-#
-# A escolha da "mais recente" é feita POR MÉTRICA: para intenção e nulo vale a mais recente
-# do instituto no período; para REJEIÇÃO vale a mais recente do instituto no período QUE TENHA
-# rejeição preenchida (se a última pesquisa dele não trouxe rejeição, usa-se a anterior do mesmo
-# período que trouxe). Sem isso, a média de rejeição ficaria com poucos institutos e distorcida.
+# A escolha é por métrica: na intenção e no nulo vale a mais recente do instituto; na rejeição
+# vale a mais recente que tenha rejeição preenchida, mesmo que não seja a mesma da intenção.
 # ---------------------------------------------------------------------------
 def _ultima_pesquisa_por_instituto(g: pd.DataFrame) -> pd.DataFrame:
-    """De cada instituto presente em `g`, mantém só a pesquisa mais recente.
-
-    Ver o LEMBRETE acima: é isso que garante que a média mensal nunca conte duas
-    pesquisas do mesmo instituto no mesmo mês — só a mais recente das duas (ou mais)
-    é usada no cálculo.
-    """
+    """Mantém só a pesquisa mais recente de cada instituto (ver o LEMBRETE acima)."""
     return g.sort_values(["data", "ord"]).groupby("instituto").tail(1)
 
 
@@ -78,24 +64,21 @@ def _ultima_com_rejeicao_por_instituto(g: pd.DataFrame) -> pd.DataFrame:
     return _ultima_pesquisa_por_instituto(g[g["rej_lula"].notna() & g["rej_flavio"].notna()])
 
 
-def medias_mensais(df: pd.DataFrame) -> pd.DataFrame:
-    """Uma linha por mês, com as médias de intenção, nulo e rejeição.
+def _medias(df: pd.DataFrame, coluna: str, ordem: tuple[str, ...], nomes: dict[str, str]) -> pd.DataFrame:
+    """Médias por grupo de `coluna` (mês ou período), na ordem de `ordem`.
 
-    A média entra com, no máximo, uma pesquisa por instituto no mês — sempre a mais
-    recente dele —, para que um instituto que publique várias pesquisas no mesmo mês
-    não pese mais que os outros. `n` é o total de pesquisas do mês (todas, sem
-    deduplicar); `n_intencao`/`n_rejeicao` contam só os institutos que entraram na média. Na
-    rejeição, de cada instituto vale a pesquisa mais recente do período que tenha rejeição.
+    Aplica a regra do LEMBRETE acima dentro de cada grupo. A coluna de saída continua se
+    chamando `mes`/`mes_nome` para servir aos mesmos gráficos, seja o grupo um mês ou uma semana.
     """
     linhas = []
-    for mes in sorted(df["mes"].unique(), key=MESES.index):
-        g_mes = df[df["mes"] == mes]
+    for mes in sorted(df[coluna].unique(), key=ordem.index):
+        g_mes = df[df[coluna] == mes]
         g = _ultima_pesquisa_por_instituto(g_mes)
         g_rej = _ultima_com_rejeicao_por_instituto(g_mes)
         linhas.append(
             {
                 "mes": mes,
-                "mes_nome": MESES_NOME[mes],
+                "mes_nome": nomes[mes],
                 "n": len(g_mes),
                 "n_intencao": int(g["lula"].notna().sum()),
                 "n_rejeicao": len(g_rej),
@@ -107,6 +90,27 @@ def medias_mensais(df: pd.DataFrame) -> pd.DataFrame:
             }
         )
     return pd.DataFrame(linhas)
+
+
+def medias_mensais(df: pd.DataFrame) -> pd.DataFrame:
+    """Uma linha por mês (outubro dividido em Out1/Out2), com as médias de intenção, nulo e rejeição.
+
+    A média entra com, no máximo, uma pesquisa por instituto no mês — sempre a mais
+    recente dele —, para que um instituto que publique várias pesquisas no mesmo mês
+    não pese mais que os outros. `n` é o total de pesquisas do mês (todas, sem
+    deduplicar); `n_intencao`/`n_rejeicao` contam só os institutos que entraram na média. Na
+    rejeição, de cada instituto vale a pesquisa mais recente do período que tenha rejeição.
+    """
+    return _medias(df, "mes", MESES, MESES_NOME)
+
+
+def medias_periodos(df: pd.DataFrame) -> pd.DataFrame:
+    """Igual a `medias_mensais`, mas com outubro em semanas (1º a 4º domingo) — gráficos gerais.
+
+    Vale a mesma regra: dentro de cada semana, um instituto entra uma vez só (a pesquisa mais
+    recente dele; na rejeição, a mais recente que traga rejeição).
+    """
+    return _medias(df, "periodo", PERIODOS_GERAIS, PERIODOS_GERAIS_NOME)
 
 
 # ---------------------------------------------------------------------------

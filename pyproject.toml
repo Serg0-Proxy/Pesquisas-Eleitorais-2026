@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pesquisas-eleitorais-2026"
 version = "1.0.0"
-description = "Dashboard de pesquisas eleitorais 2026 (2º turno) com dados em CSV, cálculos em pandas e gráficos em Plotly."
+description = "Dashboard de pesquisas eleitorais do 2º turno de 2026, com pandas e Plotly."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

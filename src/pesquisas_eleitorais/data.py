@@ -16,6 +16,7 @@ from .config import (
     INSTITUTOS,
     TOLERANCIA_SOMA,
     mes_da_data,
+    periodo_geral,
 )
 
 
@@ -108,11 +109,16 @@ def validar(df: pd.DataFrame) -> list[str]:
 # Preparação (colunas derivadas)
 # ---------------------------------------------------------------------------
 def preparar(df: pd.DataFrame) -> pd.DataFrame:
-    """Ordena (de forma estável) e cria as colunas derivadas: ord, mes, mes_num, dia_do_ano."""
+    """Ordena (de forma estável) e cria as colunas derivadas: ord, mes, periodo, mes_num, dia_do_ano.
+
+    `mes` (Out1/Out2) alimenta placar, tabela e zoom; `periodo` (outubro por domingos) alimenta
+    as médias gerais de intenção e de rejeição.
+    """
     df = df.sort_values("data", kind="stable").reset_index(drop=True)
     df["ord"] = df.index + 1
     df["mes_num"] = df["data"].dt.month
     df["mes"] = [mes_da_data(d.day, d.month) for d in df["data"]]
+    df["periodo"] = [periodo_geral(d.date()) for d in df["data"]]
     df["dia_do_ano"] = df["data"].dt.dayofyear
     return df
 

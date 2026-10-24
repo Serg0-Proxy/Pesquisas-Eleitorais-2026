@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -20,9 +21,16 @@ from .charts import (
     grafico_rejeicao_mensal,
     lista_institutos,
 )
-from .config import CSV_PADRAO, PERIODO_EXIBIDO, REPO_URL_PADRAO, SAIDA_PADRAO
+from .config import (
+    COR_GUIA_CLARO,
+    COR_GUIA_ESCURO,
+    CSV_PADRAO,
+    PERIODO_EXIBIDO,
+    REPO_URL_PADRAO,
+    SAIDA_PADRAO,
+)
 from .data import carregar
-from .metrics import classificar, medias_mensais, placar_mensal
+from .metrics import classificar, medias_mensais, medias_periodos, placar_mensal
 
 CONFIG_ESTATICO = {"displayModeBar": False, "responsive": True}
 CONFIG_EVOLUCAO = {
@@ -181,6 +189,12 @@ def _institutos(df: pd.DataFrame) -> list[dict[str, Any]]:
     return saida
 
 
+def _data_uri_csv(texto: str) -> str:
+    """CSV embutido no próprio HTML (data URI): o botão baixa o arquivo direto, mesmo com o
+    HTML aberto sozinho do computador, sem depender da pasta data/ ao lado dele."""
+    return "data:text/csv;charset=utf-8;base64," + base64.b64encode(texto.encode("utf-8")).decode("ascii")
+
+
 # ---------------------------------------------------------------------------
 # Construção
 # ---------------------------------------------------------------------------
@@ -194,7 +208,8 @@ def construir_site(
     """Lê e valida o CSV, calcula tudo em Python e grava `<saida>/index.html`."""
     csv, saida = Path(csv), Path(saida)
     df = carregar(csv)  # lança DadosInvalidos se houver problema
-    med = medias_mensais(df)
+    med = medias_mensais(df)  # KPIs, tabelas e placar: outubro em Out1/Out2
+    med_geral = medias_periodos(df)  # gráficos gerais: outubro em semanas (1º ao 4º domingo)
 
     fig_evolucao, evo_cfg = grafico_evolucao(df)
     fig_instituto, inst_cfg = grafico_instituto(df)
@@ -212,14 +227,15 @@ def construir_site(
         "kpis_rejeicao": _kpis(med, "rejeicao"),
         "placar_intencao": placar_mensal(df, "intencao").to_dict("records"),
         "placar_rejeicao": placar_mensal(df, "rejeicao").to_dict("records"),
-        "fig_intencao": _figura_html(grafico_intencao_mensal(med), "graf-intencao", CONFIG_ESTATICO),
-        "fig_rejeicao": _figura_html(grafico_rejeicao_mensal(med), "graf-rejeicao", CONFIG_ESTATICO),
+        "fig_intencao": _figura_html(grafico_intencao_mensal(med_geral), "graf-intencao", CONFIG_ESTATICO),
+        "fig_rejeicao": _figura_html(grafico_rejeicao_mensal(med_geral), "graf-rejeicao", CONFIG_ESTATICO),
         "fig_placar_intencao": _figura_html(grafico_placar(df, "intencao"), "graf-placar-intencao", CONFIG_ESTATICO),
         "fig_placar_rejeicao": _figura_html(grafico_placar(df, "rejeicao"), "graf-placar-rejeicao", CONFIG_ESTATICO),
         "fig_evolucao": _figura_html(fig_evolucao, "graf-evolucao", CONFIG_EVOLUCAO),
         "fig_instituto": _figura_html(fig_instituto, "graf-instituto", CONFIG_ESTATICO),
         "evo_cfg": evo_cfg,
         "inst_cfg": inst_cfg,
+        "cores_guia": {"escuro": COR_GUIA_ESCURO, "claro": COR_GUIA_CLARO},
         "zoom_nomes": list(evo_cfg["zoom"]),
         "institutos": _institutos(df),
         "tabelas": _tabelas(df, med),
@@ -229,12 +245,13 @@ def construir_site(
         loader=PackageLoader("pesquisas_eleitorais", "templates"),
         autoescape=select_autoescape(enabled_extensions=("j2",), default_for_string=True),
     )
+    medias_csv = med.drop(columns=["mes_nome"]).to_csv(index=False, float_format="%g", lineterminator="\n")
+    contexto["csv_uri"] = _data_uri_csv(csv.read_text(encoding="utf-8"))
+    contexto["medias_uri"] = _data_uri_csv(medias_csv)
     html = env.get_template("index.html.j2").render(**contexto)
 
     (saida / "data").mkdir(parents=True, exist_ok=True)
     (saida / "index.html").write_text(html, encoding="utf-8")
     shutil.copyfile(csv, saida / "data" / "pesquisas.csv")
-    med.drop(columns=["mes_nome"]).to_csv(
-        saida / "data" / "medias_mensais.csv", index=False, float_format="%g", lineterminator="\n"
-    )
+    (saida / "data" / "medias_mensais.csv").write_text(medias_csv, encoding="utf-8")
     return saida / "index.html"
