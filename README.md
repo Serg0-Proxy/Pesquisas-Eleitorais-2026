@@ -6,7 +6,7 @@ Dashboard online: https://serg0-proxy.github.io/Pesquisas-Eleitorais-2026/
 
 ## Dados
 
-Um único arquivo, `data/pesquisas.csv`, com uma pesquisa por linha: 187 pesquisas de 20 institutos, de janeiro a outubro de 2026.
+Um único arquivo, `data/pesquisas.csv`, com uma pesquisa por linha: 193 pesquisas de 20 institutos, de janeiro a outubro de 2026.
 
 | Coluna | Descrição |
 |--------|-----------|
@@ -95,7 +95,7 @@ ruff check .
 ## Como funciona
 
 - Médias: de cada instituto entra só a pesquisa mais recente do período, para quem publica muito não pesar mais que os outros. Na rejeição, vale a mais recente que tenha rejeição.
-- Períodos: os meses seguem o calendário. Nos gráficos de média, outubro é dividido em semanas (1º ao 4º domingo: 04, 11, 18 e 25/10). No placar e na tabela, em antes (até 05/10) e depois do 1º turno (a partir de 06/10).
+- Períodos: os meses seguem o calendário. Outubro é dividido em quatro semanas que terminam no domingo (Out 1: até 04/10, Out 2: 05 a 11/10, Out 3: 12 a 18/10 e Out 4: 19 a 25/10), usadas nos gráficos de média e no placar. KPIs, tabelas e zoom da evolução dividem outubro em antes (até 05/10) e depois do 1º turno (a partir de 06/10).
 - Arredondamento: meio para cima (46,95 vira 47,0), feito com `Decimal`.
 - Placar: conta todas as pesquisas do mês, sem a regra de uma por instituto.
 - Vantagem: só conta como "à frente" quando a diferença passa da margem de erro da pesquisa; senão é empate técnico.

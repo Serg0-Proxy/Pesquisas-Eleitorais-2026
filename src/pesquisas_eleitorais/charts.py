@@ -20,7 +20,12 @@ from .config import (
     COR_GUIA_ESCURO,
     COR_LULA,
     COR_NULO,
+    COR_PLACAR_EMPATE,
+    COR_PLACAR_FLAVIO,
+    COR_PLACAR_LULA,
+    COR_REGUA,
     COR_TEXTO,
+    ESPESSURA_GUIA,
     FONTE,
     HOVER_BORDA,
     HOVER_FLAVIO,
@@ -40,7 +45,7 @@ from .metrics import (
     faixa_mensal,
     media_movel,
     passo_para,
-    placar_mensal,
+    placar_periodos,
     tendencia_linear,
 )
 
@@ -73,15 +78,41 @@ def _layout(altura: int, **extra: Any) -> dict[str, Any]:
 
 
 def _guia_x() -> dict[str, Any]:
-    """Linha-guia vertical do hover unificado: bem fina, sólida e sutil (no lugar da pontilhada)."""
+    """Linha-guia vertical do hover unificado: violeta fraca, bem fina e presa aos pontos."""
     return {
         "showspikes": True,
         "spikemode": "across",
-        "spikesnap": "cursor",
+        "spikesnap": "data",
         "spikedash": "solid",
-        "spikethickness": 1,
+        "spikethickness": ESPESSURA_GUIA,
         "spikecolor": COR_GUIA_ESCURO,
     }
+
+
+def _regua(n: int) -> list[dict[str, Any]]:
+    """Risquinhos leves, como uma régua, na divisa entre um período e o seguinte (eixo x)."""
+    return [
+        {
+            "type": "line",
+            "xref": "x",
+            "yref": "paper",
+            "x0": i - 0.5,
+            "x1": i - 0.5,
+            "y0": 0,
+            "y1": -0.035,
+            "line": {"color": COR_REGUA, "width": 1},
+            "layer": "below",
+        }
+        for i in range(n + 1)
+    ]
+
+
+def _eixo_periodos(fig: go.Figure, med: pd.DataFrame, coluna_n: str) -> None:
+    """Legenda curta no eixo ("Jan", "Out 1"...) e régua; o hover continua mostrando o nome completo."""
+    n = len(med)
+    textos = [f"{r.mes_abrev}<br>{getattr(r, coluna_n)} inst." for r in med.itertuples()]
+    fig.update_xaxes(tickmode="array", tickvals=list(range(n)), ticktext=textos)
+    fig.update_layout(shapes=_regua(n))
 
 
 def _validos(lula: pd.Series | list[float], flavio: pd.Series | list[float]) -> tuple[list[float], list[float]]:
@@ -171,7 +202,7 @@ def _posicoes(lula: pd.Series, flavio: pd.Series) -> tuple[list[str], list[str]]
 def grafico_intencao_mensal(med: pd.DataFrame) -> go.Figure:
     """Lula e Flávio no eixo esquerdo (ampliado); Nulo/Branco/NS no eixo direito, mais embaixo."""
     eixo = eixo_intencao(pd.concat([med["lula"], med["flavio"]]), med["nulo"])
-    rotulos = [f"{r.mes_nome}<br>{r.n_intencao} institutos" for r in med.itertuples()]
+    rotulos = [f"{r.mes_nome}<br>{r.n_intencao} institutos" for r in med.itertuples()]  # título do hover
     pos_l, pos_f = _posicoes(med["lula"], med["flavio"])
     val_l, val_f = _validos(med["lula"], med["flavio"])
 
@@ -185,9 +216,10 @@ def grafico_intencao_mensal(med: pd.DataFrame) -> go.Figure:
     ultimo = med.iloc[-1]  # período mais recente: é o que a caixinha de votos válidos mostra
     caixa = _caixa_validos(str(ultimo["mes_nome"]), val_l[-1], val_f[-1], y=1.02)
     fig.update_layout(
-        **_layout(380, hovermode="x unified", margin={"l": 52, "r": 52, "t": 64, "b": 48}, annotations=[caixa])
+        **_layout(380, hovermode="x unified", margin={"l": 52, "r": 52, "t": 64, "b": 56}, annotations=[caixa])
     )
     fig.update_xaxes(type="category", showgrid=False, tickangle=0, **_guia_x())
+    _eixo_periodos(fig, med, "n_intencao")
     fig.update_yaxes(
         range=[eixo.y_min, eixo.y_max],
         dtick=eixo.passo,
@@ -215,8 +247,9 @@ def grafico_rejeicao_mensal(med: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(_serie("Rejeição Lula", rotulos, med["rej_lula"], COR_LULA, pos_l))
     fig.add_trace(_serie("Rejeição Flávio", rotulos, med["rej_flavio"], COR_FLAVIO, pos_f))
-    fig.update_layout(**_layout(380, hovermode="x unified"))
+    fig.update_layout(**_layout(380, hovermode="x unified", margin={"l": 52, "r": 52, "t": 28, "b": 56}))
     fig.update_xaxes(type="category", showgrid=False, tickangle=0, **_guia_x())
+    _eixo_periodos(fig, med, "n_rejeicao")
     fig.update_yaxes(
         range=[eixo.y_min, eixo.y_max],
         dtick=eixo.passo,
@@ -231,16 +264,16 @@ def grafico_rejeicao_mensal(med: pd.DataFrame) -> go.Figure:
 # Placar (visão "todos os meses")
 # ---------------------------------------------------------------------------
 def grafico_placar(df: pd.DataFrame, tipo: str) -> go.Figure:
-    tabela = placar_mensal(df, tipo)  # type: ignore[arg-type]
+    tabela = placar_periodos(df, tipo)  # type: ignore[arg-type]
     nomes = {
         "intencao": ("Lula à frente", "Flávio à frente"),
         "rejeicao": ("Lula mais rejeitado", "Flávio mais rejeitado"),
     }[tipo]
     fig = go.Figure()
-    for coluna, nome, cor in (
-        ("lula", nomes[0], COR_LULA),
-        ("empate", "Empate técnico", COR_NULO),
-        ("flavio", nomes[1], COR_FLAVIO),
+    for coluna, nome, cor, cor_texto in (
+        ("lula", nomes[0], COR_PLACAR_LULA, "rgba(255,255,255,0.96)"),
+        ("empate", "Empate técnico", COR_PLACAR_EMPATE, "rgba(241,245,249,0.92)"),
+        ("flavio", nomes[1], COR_PLACAR_FLAVIO, "rgba(255,255,255,0.96)"),
     ):
         fig.add_trace(
             go.Bar(
@@ -248,25 +281,36 @@ def grafico_placar(df: pd.DataFrame, tipo: str) -> go.Figure:
                 x=tabela[coluna],
                 name=nome,
                 orientation="h",
-                marker={"color": cor},
+                marker={"color": cor, "line": {"color": "rgba(255,255,255,0.35)", "width": 1.5}},
                 text=[str(v) if v else "" for v in tabela[coluna]],
                 textposition="inside",
                 insidetextanchor="middle",
-                textfont={"color": "white", "size": 12},
+                textfont={"color": cor_texto, "size": 12},
                 hovertemplate=f"{nome}: %{{x}}<extra></extra>",
             )
         )
     fig.update_layout(
         **_layout(
-            80 + 34 * len(tabela),
+            90 + 36 * len(tabela),
             barmode="stack",
+            barcornerradius=9,  # pontas arredondadas em cada barra
+            bargap=0.36,
             showlegend=True,
-            legend={"orientation": "h", "y": 1.0, "yanchor": "bottom", "x": 0},
-            margin={"l": 90, "r": 20, "t": 40, "b": 30},
+            legend={
+                "orientation": "h",
+                "y": 1.0,
+                "yanchor": "bottom",
+                "x": 0,
+                "font": {"size": 11},
+                "itemsizing": "constant",
+            },
+            margin={"l": 118, "r": 20, "t": 40, "b": 30},
         )
     )
-    fig.update_yaxes(autorange="reversed", showgrid=False)
-    fig.update_xaxes(showgrid=True, gridcolor=COR_GRADE, zeroline=False, dtick=5)
+    fig.update_yaxes(autorange="reversed", showgrid=False, ticks="", tickfont={"size": 12})
+    fig.update_xaxes(
+        showgrid=True, gridcolor="rgba(148, 163, 184, 0.14)", zeroline=False, dtick=10, ticks="", tickfont={"size": 11}
+    )
     return fig
 
 

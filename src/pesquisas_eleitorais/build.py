@@ -30,7 +30,7 @@ from .config import (
     SAIDA_PADRAO,
 )
 from .data import carregar
-from .metrics import classificar, medias_mensais, medias_periodos, placar_mensal
+from .metrics import classificar, medias_mensais, medias_periodos, placar_periodos
 
 CONFIG_ESTATICO = {"displayModeBar": False, "responsive": True}
 CONFIG_EVOLUCAO = {
@@ -208,8 +208,8 @@ def construir_site(
     """Lê e valida o CSV, calcula tudo em Python e grava `<saida>/index.html`."""
     csv, saida = Path(csv), Path(saida)
     df = carregar(csv)  # lança DadosInvalidos se houver problema
-    med = medias_mensais(df)  # KPIs, tabelas e placar: outubro em Out1/Out2
-    med_geral = medias_periodos(df)  # gráficos gerais: outubro em semanas (1º ao 4º domingo)
+    med = medias_mensais(df)  # KPIs, tabelas e zoom: outubro em Out1/Out2
+    med_geral = medias_periodos(df)  # médias e placar: outubro em quatro semanas (Out 1 a Out 4)
 
     fig_evolucao, evo_cfg = grafico_evolucao(df)
     fig_instituto, inst_cfg = grafico_instituto(df)
@@ -225,8 +225,8 @@ def construir_site(
         "gerado_em": datetime.now().strftime("%d/%m/%Y %H:%M"),
         "kpis_intencao": _kpis(med, "intencao"),
         "kpis_rejeicao": _kpis(med, "rejeicao"),
-        "placar_intencao": placar_mensal(df, "intencao").to_dict("records"),
-        "placar_rejeicao": placar_mensal(df, "rejeicao").to_dict("records"),
+        "placar_intencao": placar_periodos(df, "intencao").to_dict("records"),
+        "placar_rejeicao": placar_periodos(df, "rejeicao").to_dict("records"),
         "fig_intencao": _figura_html(grafico_intencao_mensal(med_geral), "graf-intencao", CONFIG_ESTATICO),
         "fig_rejeicao": _figura_html(grafico_rejeicao_mensal(med_geral), "graf-rejeicao", CONFIG_ESTATICO),
         "fig_placar_intencao": _figura_html(grafico_placar(df, "intencao"), "graf-placar-intencao", CONFIG_ESTATICO),

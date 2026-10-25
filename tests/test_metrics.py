@@ -198,3 +198,16 @@ def test_medias_periodos_usa_uma_pesquisa_por_instituto_em_cada_semana() -> None
     assert med.loc["Dom2", "lula"] == 44.0  # só a de 10/10 entra na semana
     assert med.loc["Dom2", "rej_lula"] == 50.0  # rejeição: a mais recente da semana COM rejeição
     assert med.loc["Dom3", "n_intencao"] == 1
+
+
+def test_placar_periodos_divide_outubro_em_quatro_semanas() -> None:
+    from pesquisas_eleitorais.data import carregar
+    from pesquisas_eleitorais.metrics import placar_mensal, placar_periodos
+
+    df = carregar("data/pesquisas.csv")
+    por_semana = placar_periodos(df, "intencao")
+    nomes = list(por_semana["mes_nome"])
+    assert nomes[-4:] == ["Out 1 (01–04/10)", "Out 2 (05–11/10)", "Out 3 (12–18/10)", "Out 4 (19–25/10)"]
+    # as quatro semanas somam as mesmas pesquisas de Out1 + Out2: nada se perde na nova divisão
+    antigo = placar_mensal(df, "intencao").tail(2)["total"].sum()
+    assert por_semana.tail(4)["total"].sum() == antigo

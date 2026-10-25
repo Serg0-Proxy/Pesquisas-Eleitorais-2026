@@ -11,7 +11,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-from .config import MESES, MESES_NOME, PERIODOS_GERAIS, PERIODOS_GERAIS_NOME
+from .config import MESES, MESES_NOME, PERIODOS_GERAIS, PERIODOS_GERAIS_ABREV, PERIODOS_GERAIS_NOME
 
 Tipo = Literal["intencao", "rejeicao"]
 Vantagem = Literal["lula", "flavio", "empate"]
@@ -79,6 +79,7 @@ def _medias(df: pd.DataFrame, coluna: str, ordem: tuple[str, ...], nomes: dict[s
             {
                 "mes": mes,
                 "mes_nome": nomes[mes],
+                "mes_abrev": PERIODOS_GERAIS_ABREV.get(mes, mes),
                 "n": len(g_mes),
                 "n_intencao": int(g["lula"].notna().sum()),
                 "n_rejeicao": len(g_rej),
@@ -141,12 +142,23 @@ def placar(df: pd.DataFrame, tipo: Tipo) -> dict[str, int]:
     return {k: int(contagem.get(k, 0)) for k in ("lula", "empate", "flavio")} | {"total": int(contagem.sum())}
 
 
-def placar_mensal(df: pd.DataFrame, tipo: Tipo) -> pd.DataFrame:
-    """Placar de cada mês (colunas: mes, mes_nome, lula, empate, flavio, total)."""
+def _placar_por(
+    df: pd.DataFrame, tipo: Tipo, coluna: str, ordem: tuple[str, ...], nomes: dict[str, str]
+) -> pd.DataFrame:
     linhas = []
-    for mes in sorted(df["mes"].unique(), key=MESES.index):
-        linhas.append({"mes": mes, "mes_nome": MESES_NOME[mes], **placar(df[df["mes"] == mes], tipo)})
+    for grupo in sorted(df[coluna].unique(), key=ordem.index):
+        linhas.append({"mes": grupo, "mes_nome": nomes[grupo], **placar(df[df[coluna] == grupo], tipo)})
     return pd.DataFrame(linhas)
+
+
+def placar_mensal(df: pd.DataFrame, tipo: Tipo) -> pd.DataFrame:
+    """Placar de cada mês, com outubro em Out1/Out2 (colunas: mes, mes_nome, lula, empate, flavio, total)."""
+    return _placar_por(df, tipo, "mes", MESES, MESES_NOME)
+
+
+def placar_periodos(df: pd.DataFrame, tipo: Tipo) -> pd.DataFrame:
+    """Igual a `placar_mensal`, mas com outubro em quatro semanas (Out 1 a Out 4)."""
+    return _placar_por(df, tipo, "periodo", PERIODOS_GERAIS, PERIODOS_GERAIS_NOME)
 
 
 # ---------------------------------------------------------------------------

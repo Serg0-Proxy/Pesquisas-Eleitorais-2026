@@ -91,17 +91,23 @@
 
   /* ---------- placar ---------- */
   .placar-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 4px; }
-  .placar-card { border-radius: 14px; padding: 18px 20px; border: 1px solid var(--border); }
-  .placar-card.pc-lula { background: var(--lula-tint); border-color: var(--lula-line); }
-  .placar-card.pc-emp { background: var(--surface-2); }
-  .placar-card.pc-flavio { background: var(--flavio-tint); border-color: var(--flavio-line); }
-  .placar-num { font-size: 40px; font-weight: 750; line-height: 1; letter-spacing: -.04em; margin-bottom: 8px; }
+  .placar-card { position: relative; border-radius: 18px; padding: 20px 22px; border: 1px solid var(--border); box-shadow: 0 1px 2px rgba(15,23,42,.05), 0 10px 28px -16px rgba(15,23,42,.30); transition: transform .25s ease, box-shadow .25s ease; }
+  .placar-card:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgba(15,23,42,.06), 0 16px 34px -16px rgba(15,23,42,.38); }
+  .placar-card.pc-lula { background: linear-gradient(145deg, var(--lula-tint), transparent 80%), var(--surface); border-color: var(--lula-line); }
+  .placar-card.pc-emp { background: linear-gradient(145deg, var(--surface-2), transparent 85%), var(--surface); }
+  .placar-card.pc-flavio { background: linear-gradient(145deg, var(--flavio-tint), transparent 80%), var(--surface); border-color: var(--flavio-line); }
+  .placar-num { font-size: 40px; font-weight: 700; line-height: 1; letter-spacing: -.04em; margin-bottom: 8px; }
   .placar-label { font-size: 13px; font-weight: 600; }
   .placar-label small { display: block; font-size: 12px; font-weight: 400; opacity: .75; margin-top: 2px; }
   .pc-lula .placar-num, .pc-lula .placar-label { color: var(--lula-ink); }
   .pc-flavio .placar-num, .pc-flavio .placar-label { color: var(--flavio-ink); }
   .pc-emp .placar-num { color: var(--text); } .pc-emp .placar-label { color: var(--muted); }
   .view-gap { margin-top: 14px; }
+
+  /* linha-guia do hover (Plotly): surge suavemente e com traço fino */
+  @keyframes guia-entra { from { opacity: 0; } to { opacity: 1; } }
+  .js-plotly-plot .hoverlayer .spikeline { shape-rendering: geometricPrecision; animation: guia-entra .22s ease-out; }
+  @media (prefers-reduced-motion: reduce) { .js-plotly-plot .hoverlayer .spikeline { animation: none; } }
 
   /* ---------- tabelas ---------- */
   .tbl-wrap { overflow-x: auto; }

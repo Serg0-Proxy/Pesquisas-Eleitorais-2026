@@ -48,7 +48,7 @@
   <div id="tab-geral">
 
     <section class="panel">
-      <div class="ph"><div><span class="eyebrow">Médias mensais · outubro por semana</span><h2>Intenção de voto</h2>
+      <div class="ph"><div><span class="eyebrow">Médias por período · outubro por semana</span><h2>Intenção de voto</h2>
         <div class="psub">2º turno · Lula × Flávio, com a linha de Nulo/Branco/NS em eixo próprio</div></div></div>
       <div class="kpis">
         {% for k in kpis_intencao %}
@@ -79,9 +79,9 @@
         </select>
         {% for c in placar_intencao %}
         <div class="placar-row view-gap" data-grupo="pv" data-chave="{{ c.mes_nome }}">
-          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no mês</small></div></div>
+          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no período</small></div></div>
           <div class="placar-card pc-emp"><div class="placar-num">{{ c.empate }}</div><div class="placar-label">Empate técnico<small>dentro da margem de erro</small></div></div>
-          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no mês</small></div></div>
+          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio à frente<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} no período</small></div></div>
         </div>
         {% endfor %}
       </div>
@@ -89,7 +89,7 @@
     </section>
 
     <section class="panel">
-      <div class="ph"><div><span class="eyebrow">Médias mensais · outubro por semana</span><h2>Rejeição</h2>
+      <div class="ph"><div><span class="eyebrow">Médias por período · outubro por semana</span><h2>Rejeição</h2>
         <div class="psub">Quem os eleitores dizem que não votariam de jeito nenhum</div></div></div>
       <div class="kpis">
         {% for k in kpis_rejeicao %}
@@ -119,9 +119,9 @@
         </select>
         {% for c in placar_rejeicao %}
         <div class="placar-row view-gap" data-grupo="pr" data-chave="{{ c.mes_nome }}">
-          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no mês</small></div></div>
+          <div class="placar-card pc-lula"><div class="placar-num">{{ c.lula }}</div><div class="placar-label">Lula mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no período</small></div></div>
           <div class="placar-card pc-emp"><div class="placar-num">{{ c.empate }}</div><div class="placar-label">Empate técnico<small>dentro da margem de erro</small></div></div>
-          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no mês</small></div></div>
+          <div class="placar-card pc-flavio"><div class="placar-num">{{ c.flavio }}</div><div class="placar-label">Flávio mais rejeitado<small>{{ c.total }} {{ 'pesquisa' if c.total == 1 else 'pesquisas' }} com rejeição no período</small></div></div>
         </div>
         {% endfor %}
       </div>

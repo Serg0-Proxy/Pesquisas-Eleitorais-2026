@@ -44,6 +44,12 @@ PERIODO_EXIBIDO = "Jan–Out 2026"  # texto do subtítulo (a coleta segue até o
 #     de 12-16/10 e 15-19/10 (BR-06396/2026) só divulgaram votos válidos (51,1/48,9 e 50,7/49,3), sem
 #     totais, e NÃO foram adicionadas
 # Observações de dados (sem rejeição pendente):
+#   - AtlasIntel, 18-23/10/2026 (BR-06380/2026): sem rejeição; nulo=1,7 (branco/nulo/NS)
+#   - Veritá, 19-23/10/2026: sem rejeição; nulo=4,1 (100 - 49,44 - 46,46); válidos 51,56/48,44 batem
+#   - Pesquisas de 22-24/10 citadas pelo Poder360 e AINDA FORA do CSV por falta dos votos totais (conferir
+#     assim que saírem): Futura 23-24/10 (BR-09726/2026; válidos 50,1/49,9; rejeição Lula 46,2 / Flávio
+#     46,6), PoderData/Aya 23-24/10 (BR-02828/2026; válidos 51/49, mesmos da rodada de 19-21/10),
+#     DataTrends 19-21/10 (BR-03365/2026; válidos 51,5/48,5) e Palver 22-24/10 (totais 50/49)
 #   - Real Time Big Data, 19-22/10/2026 (BR-09670/2026): totais 49/45 (nulo=6) conferidos na Transmissão
 #     Política; válidos 52/48 (Poder360). Rejeição 36/33 ("não votaria") do Poder360 — nível bem abaixo
 #     das outras pesquisas, reconferir a pergunta/metodologia
@@ -130,10 +136,10 @@ MESES_NOME = dict(
 # ---------------------------------------------------------------------------
 # Períodos dos gráficos de MÉDIA GERAL (intenção e rejeição)
 # ---------------------------------------------------------------------------
-# Nesses dois gráficos, outubro não usa "Out1/Out2": vira uma barra por SEMANA, e cada semana
-# é identificada pelo domingo que a encerra (1º domingo = 04/10, dia do 1º turno; 2º = 11/10;
-# 3º = 18/10; 4º = 25/10, dia do 2º turno). Ex.: o "2º domingo" reúne as pesquisas de 05 a 11/10.
-# Os demais meses seguem como mês civil. O placar, a tabela e o zoom continuam com Out1/Out2.
+# Nos gráficos de média e no placar, outubro não usa "Out1/Out2": vira uma divisão por SEMANA
+# ("Out 1" a "Out 4"), e cada semana termina no domingo (04/10, dia do 1º turno; 11/10; 18/10 e
+# 25/10, dia do 2º turno). Ex.: "Out 2" reúne as pesquisas de 05 a 11/10. Os demais meses seguem
+# como mês civil. KPIs, tabelas e zoom da evolução continuam com Out1/Out2.
 MES_OUTUBRO = 10
 MAX_DOMINGOS = 5  # outubro de 2026 tem quatro; o quinto só existiria com dias 26–31 (nunca usado)
 
@@ -163,10 +169,20 @@ PERIODOS_GERAIS = (
     *(f"Dom{i}" for i in range(1, MAX_DOMINGOS + 1)),
     *MESES_CALENDARIO[10:],
 )
-_NOMES_DOMINGO = {
-    f"Dom{i + 1}": f"{i + 1}º domingo ({d:%d/%m})" for i, d in enumerate(domingos_de_outubro())
-}  # o 5º domingo (01/11) cai em novembro e não é usado em 2026
+
+
+def _nome_semana(i: int, domingo: date) -> str:
+    inicio = max(domingo - timedelta(days=6), date(domingo.year, MES_OUTUBRO, 1))
+    return f"Out {i} ({inicio:%d}–{domingo:%d/%m})"
+
+
+_NOMES_DOMINGO = {f"Dom{i + 1}": _nome_semana(i + 1, d) for i, d in enumerate(domingos_de_outubro())}
+# (o 5º domingo, 01/11, cai em novembro e não é usado em 2026)
 PERIODOS_GERAIS_NOME = {c: MESES_NOME[c] for c in MESES_CALENDARIO if c in MESES_NOME} | _NOMES_DOMINGO
+# Legenda curta dos gráficos de média: "Jan"... "Set", "Out 1" a "Out 4", "Nov", "Dez"
+PERIODOS_GERAIS_ABREV = {c: c for c in MESES_CALENDARIO if c != "Out"} | {
+    f"Dom{i}": f"Out {i}" for i in range(1, MAX_DOMINGOS + 1)
+}
 
 # ---------------------------------------------------------------------------
 # Institutos: apenas as formas canônicas são aceitas no CSV
@@ -237,8 +253,14 @@ HOVER_BORDA = "rgba(255, 255, 255, 0.22)"
 HOVER_TEXTO = "#f1f5f9"
 HOVER_LULA = "#fca5a5"  # tons claros de Lula/Flávio para ler bem sobre o fundo da caixinha
 HOVER_FLAVIO = "#93c5fd"
-# Linha-guia vertical do hover: fina, sutil e branca no tema escuro (cinza-azulada no claro,
-# onde o branco sumiria). O HTML só troca entre as duas conforme o tema do navegador.
-COR_GUIA_ESCURO = "rgba(255, 255, 255, 0.45)"
-COR_GUIA_CLARO = "rgba(71, 85, 105, 0.45)"
+# Linha-guia vertical do hover: violeta fraca e fina, presa aos pontos. O HTML só troca entre a
+# cor do tema escuro e a do claro, conforme o navegador.
+COR_GUIA_ESCURO = "rgba(167, 139, 250, 0.38)"  # violeta fraco
+COR_GUIA_CLARO = "rgba(124, 58, 237, 0.30)"
+ESPESSURA_GUIA = 0.8
+COR_REGUA = "rgba(148, 163, 184, 0.45)"  # risquinhos entre os períodos, no eixo x
+# Placar: tons suaves (em vez de cores chapadas) e traço claro entre as faixas
+COR_PLACAR_LULA = "rgba(248, 113, 113, 0.88)"
+COR_PLACAR_EMPATE = "rgba(148, 163, 184, 0.50)"
+COR_PLACAR_FLAVIO = "rgba(96, 165, 250, 0.88)"
 FONTE = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
