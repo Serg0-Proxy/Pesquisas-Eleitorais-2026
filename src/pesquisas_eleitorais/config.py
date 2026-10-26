@@ -46,10 +46,19 @@ PERIODO_EXIBIDO = "Jan–Out 2026"  # texto do subtítulo (a coleta segue até o
 # Observações de dados (sem rejeição pendente):
 #   - AtlasIntel, 18-23/10/2026 (BR-06380/2026): sem rejeição; nulo=1,7 (branco/nulo/NS)
 #   - Veritá, 19-23/10/2026: sem rejeição; nulo=4,1 (100 - 49,44 - 46,46); válidos 51,56/48,44 batem
-#   - Pesquisas de 22-24/10 citadas pelo Poder360 e AINDA FORA do CSV por falta dos votos totais (conferir
-#     assim que saírem): Futura 23-24/10 (BR-09726/2026; válidos 50,1/49,9; rejeição Lula 46,2 / Flávio
-#     46,6), PoderData/Aya 23-24/10 (BR-02828/2026; válidos 51/49, mesmos da rodada de 19-21/10),
-#     DataTrends 19-21/10 (BR-03365/2026; válidos 51,5/48,5) e Palver 22-24/10 (totais 50/49)
+#   - Futura, 23-24/10/2026 (BR-09726/2026): totais da Exame (48,2/47,9; branco/nulo 2,3 + indecisos 1,6),
+#     fonte única; rejeição Lula 46,2 / Flávio 46,6 (CNN, Exame). nulo=3,9
+#   - DataTrends, 19-21/10/2026 (BR-03365/2026): totais 50/46 (Blog do BG, Edmar Lyra) e válidos 51,9/48,1;
+#     a lista do Poder360 ainda mostra os 51,5/48,5 da rodada de 15-17/10. Sem rejeição; nulo=4
+#   - Palver, 22-24/10/2026 (BR-01794/2026): totais 49/50 (dadobruto.com e portais regionais); nulo=1; sem rejeição
+#   - Data Ranking, 14-16/10/2026 (BR-00152/2026): instituto novo e pouco conhecido, com parceria do portal
+#     Fonte83; Lula 45,4 / Flávio 44,6 e 4% NS/NR + brancos/nulos (nulo=10). Sem rejeição
+#   - Só votos válidos, adicionadas com nulo=0 (a pedido): Veritá 12-16/10 (BR-01107/2026) e 15-19/10
+#     (BR-06396/2026), Colectta 23/10 (BR-05601/2026; instituto novo, 3.000 entrevistas) e PoderData/Aya
+#     23-24/10 (BR-02828/2026; totais só em imagem). Nelas lula+flavio=100, então a média de nulo cai um pouco
+#     e a de Lula/Flávio sobe um pouco; trocar pelos totais reais se aparecerem
+#   - AINDA FORA do CSV: Vetor/Arrow 22-23/10 (válidos 52,7/47,3; totais 50/44,9; URA, 6.867 entrevistas):
+#     registro no TSE não confirmado, fora das listas do Poder360 e do Dado Bruto
 #   - Real Time Big Data, 19-22/10/2026 (BR-09670/2026): totais 49/45 (nulo=6) conferidos na Transmissão
 #     Política; válidos 52/48 (Poder360). Rejeição 36/33 ("não votaria") do Poder360 — nível bem abaixo
 #     das outras pesquisas, reconferir a pergunta/metodologia
@@ -208,6 +217,8 @@ INSTITUTOS = (
     "DataTrends",
     "Alfa Inteligência",
     "Veritá",
+    "Data Ranking",
+    "Colectta",
 )
 
 # Variações comuns (em minúsculas) aceitas apenas no comando `adicionar`,
@@ -232,6 +243,9 @@ ALIASES = {
     "alfa": "Alfa Inteligência",
     "alfa inteligencia": "Alfa Inteligência",
     "verita": "Veritá",
+    "data ranking": "Data Ranking",
+    "dataranking": "Data Ranking",
+    "colectta": "Colectta",
     "atlasintel": "Atlas/Intel",
     "futura": "Futura/Apex",
     "ideia": "Meio/Ideia",

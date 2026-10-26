@@ -162,6 +162,8 @@ data,instituto,lula,flavio,nulo,rej_lula,rej_flavio,margem_erro
 2026-10-15,MDA/CNT,45.9,46.8,7.3,48.8,46.6,2.2
 2026-10-15,Ipespe,46,48,6,47,47,2.6
 2026-10-16,GERP,45,50,5,49,46,2
+2026-10-16,Data Ranking,45.4,44.6,10,,,2.15
+2026-10-16,Veritá,48.9,51.1,0,,,1
 2026-10-17,VOX,46.4,44.6,9,45.3,45.3,2.15
 2026-10-17,Futura/Apex,47.5,48.3,4.2,47.4,45.8,2.2
 2026-10-17,DataTrends,46,49,5,,,2.19
@@ -171,6 +173,7 @@ data,instituto,lula,flavio,nulo,rej_lula,rej_flavio,margem_erro
 2026-10-19,Big Data,45,48,7,,,2
 2026-10-19,Meio/Ideia,46,48,6,47.7,46.5,2.5
 2026-10-19,Alfa Inteligência,45.9,48.8,5.3,46,45,1.9
+2026-10-19,Veritá,49.3,50.7,0,,,1
 2026-10-20,Instituto França,39.65,40.95,19.4,,,1.8
 2026-10-20,Palver,48,50,2,49,47,2.4
 2026-10-20,Genial/Quaest,44,45,11,47,52,2
@@ -178,6 +181,7 @@ data,instituto,lula,flavio,nulo,rej_lula,rej_flavio,margem_erro
 2026-10-21,GERP,45,50,5,,,2
 2026-10-21,PoderData/Aya,48,49,3,47,45,1.6
 2026-10-21,Indexa,44.1,45.2,10.7,,,2.2
+2026-10-21,DataTrends,46,50,4,,,2.19
 2026-10-22,Datafolha,46,47,7,48,48,2
 2026-10-22,Big Data,45,49,6,36,33,2
 2026-10-22,VOX,45.4,44.3,10.3,44.8,47.1,2.15
@@ -188,7 +192,11 @@ data,instituto,lula,flavio,nulo,rej_lula,rej_flavio,margem_erro
 2026-10-23,Instituto França,43.1,45.6,11.3,,,2.5
 2026-10-23,Atlas/Intel,48.4,49.9,1.7,,,1
 2026-10-23,Veritá,46.46,49.44,4.1,,,1
+2026-10-23,Colectta,50.3,49.7,0,,,2
 2026-10-24,Datafolha,47,48,5,46,45,2
 2026-10-24,Genial/Quaest,45,46,9,47,49,2
 2026-10-24,BTG/Nexus,46,47,7,49.1,46.5,2.2
 2026-10-24,GERP,46,49,5,48,45,2
+2026-10-24,Futura/Apex,47.9,48.2,3.9,46.2,46.6,2.2
+2026-10-24,Palver,49,50,1,,,2.2
+2026-10-24,PoderData/Aya,49,51,0,,,1.6
