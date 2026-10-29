@@ -211,3 +211,31 @@ def test_placar_periodos_divide_outubro_em_quatro_semanas() -> None:
     # as quatro semanas somam as mesmas pesquisas de Out1 + Out2: nada se perde na nova divisão
     antigo = placar_mensal(df, "intencao").tail(2)["total"].sum()
     assert por_semana.tail(4)["total"].sum() == antigo
+
+
+def test_resultado_final_fecha_100_e_aparece_nos_graficos_de_intencao() -> None:
+    from pesquisas_eleitorais.charts import grafico_intencao_mensal
+    from pesquisas_eleitorais.config import RESULTADO_FINAL
+    from pesquisas_eleitorais.data import carregar
+    from pesquisas_eleitorais.metrics import medias_periodos
+
+    assert round(RESULTADO_FINAL["lula"] + RESULTADO_FINAL["flavio"], 2) == 100
+    fig = grafico_intencao_mensal(medias_periodos(carregar("data/pesquisas.csv")))
+    textos = [a.text for a in fig.layout.annotations]
+    assert any("Votos válidos" in t for t in textos)
+    assert any("Resultado final" in t and "51.8%" in t for t in textos)
+
+
+def test_placar_tem_uma_caixinha_por_pesquisa() -> None:
+    from pesquisas_eleitorais.charts import grafico_placar
+    from pesquisas_eleitorais.data import carregar
+    from pesquisas_eleitorais.metrics import placar_periodos
+
+    df = carregar("data/pesquisas.csv")
+    fig = grafico_placar(df, "intencao")
+    tabela = placar_periodos(df, "intencao")
+    caixas = [t for t in fig.data if t.showlegend is False]
+    assert len(caixas) == tabela["total"].max()
+    # somando as caixinhas existentes de cada linha, sai o total de pesquisas do período
+    for i, total in enumerate(tabela["total"]):
+        assert sum(1 for t in caixas if t.x[i] == 1) == total

@@ -141,7 +141,7 @@ def _tabelas(df: pd.DataFrame, med: pd.DataFrame) -> list[dict[str, Any]]:
     tabelas = []
     for m in med.itertuples():
         linhas = []
-        for r in df[df["mes"] == m.mes].itertuples():
+        for r in df[df["periodo"] == m.mes].itertuples():
             tem_voto = pd.notna(r.lula) and pd.notna(r.flavio)
             linhas.append(
                 {
@@ -238,7 +238,7 @@ def construir_site(
         "cores_guia": {"escuro": COR_GUIA_ESCURO, "claro": COR_GUIA_CLARO},
         "zoom_nomes": list(evo_cfg["zoom"]),
         "institutos": _institutos(df),
-        "tabelas": _tabelas(df, med),
+        "tabelas": _tabelas(df, med_geral),
     }
 
     env = Environment(

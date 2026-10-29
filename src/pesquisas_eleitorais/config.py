@@ -150,6 +150,10 @@ MESES_NOME = dict(
 # 25/10, dia do 2º turno). Ex.: "Out 2" reúne as pesquisas de 05 a 11/10. Os demais meses seguem
 # como mês civil. KPIs, tabelas e zoom da evolução continuam com Out1/Out2.
 MES_OUTUBRO = 10
+
+# Resultado oficial do 2º turno (TSE, 100% das seções totalizadas, 25/10/2026), em % dos votos válidos.
+# Aparece em uma caixinha, ao lado da dos votos válidos, nos gráficos de intenção, para comparação.
+RESULTADO_FINAL = {"data": date(2026, 10, 25), "lula": 51.79, "flavio": 48.21}
 MAX_DOMINGOS = 5  # outubro de 2026 tem quatro; o quinto só existiria com dias 26–31 (nunca usado)
 
 
@@ -273,8 +277,12 @@ COR_GUIA_ESCURO = "rgba(167, 139, 250, 0.38)"  # violeta fraco
 COR_GUIA_CLARO = "rgba(124, 58, 237, 0.30)"
 ESPESSURA_GUIA = 0.8
 COR_REGUA = "rgba(148, 163, 184, 0.45)"  # risquinhos entre os períodos, no eixo x
-# Placar: tons suaves (em vez de cores chapadas) e traço claro entre as faixas
-COR_PLACAR_LULA = "rgba(248, 113, 113, 0.88)"
-COR_PLACAR_EMPATE = "rgba(148, 163, 184, 0.50)"
-COR_PLACAR_FLAVIO = "rgba(96, 165, 250, 0.88)"
+# Placar (barras): mesmo visual dos cartões "Por mês", em menor escala: fundo translúcido com
+# borda e número na cor cheia, sem pontas arredondadas
+COR_PLACAR_LULA = "rgba(239, 68, 68, 0.26)"
+COR_PLACAR_EMPATE = "rgba(100, 116, 139, 0.26)"
+COR_PLACAR_FLAVIO = "rgba(59, 130, 246, 0.26)"
+COR_PLACAR_LULA_LINHA = "#ef4444"
+COR_PLACAR_EMPATE_LINHA = "#64748b"
+COR_PLACAR_FLAVIO_LINHA = "#3b82f6"
 FONTE = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"

@@ -100,4 +100,5 @@ ruff check .
 - Placar: conta todas as pesquisas do mês, sem a regra de uma por instituto.
 - Vantagem: só conta como "à frente" quando a diferença passa da margem de erro da pesquisa; senão é empate técnico.
 - Votos válidos: cada candidato sobre a soma dos dois, sem nulo, branco e indecisos.
+- Resultado final: os gráficos de intenção trazem, ao lado da caixinha dos votos válidos, o resultado oficial do 2º turno (TSE, 25/10/2026: Lula 51,79% x Flávio 48,21%), para comparar com as pesquisas. O valor fica em `RESULTADO_FINAL`, no `config.py`.
 - O HTML só exibe: todos os valores e configurações dos gráficos vêm calculados do Python.

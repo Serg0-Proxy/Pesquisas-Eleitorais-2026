@@ -21,8 +21,11 @@ from .config import (
     COR_LULA,
     COR_NULO,
     COR_PLACAR_EMPATE,
+    COR_PLACAR_EMPATE_LINHA,
     COR_PLACAR_FLAVIO,
+    COR_PLACAR_FLAVIO_LINHA,
     COR_PLACAR_LULA,
+    COR_PLACAR_LULA_LINHA,
     COR_REGUA,
     COR_TEXTO,
     ESPESSURA_GUIA,
@@ -35,6 +38,7 @@ from .config import (
     MESES,
     MESES_CALENDARIO,
     MESES_NOME,
+    RESULTADO_FINAL,
 )
 from .metrics import (
     ajustar_y,
@@ -153,6 +157,21 @@ def _caixa_validos(titulo: str, lula: float, flavio: float, *, y: float) -> dict
     }
 
 
+def _caixa_resultado(titulo_validos: str, *, y: float) -> dict[str, Any]:
+    """Caixinha com o resultado oficial do 2º turno, à esquerda da dos votos válidos."""
+    r = RESULTADO_FINAL
+    caixa = _caixa_validos("", r["lula"], r["flavio"], y=y)
+    caixa["text"] = (
+        f"<b>Resultado final</b> · 2º turno ({r['data']:%d/%m})<br>"
+        f'<span style="color:{HOVER_LULA}"><b>Lula {r["lula"]:.1f}%</b></span>'
+        "  ×  "
+        f'<span style="color:{HOVER_FLAVIO}"><b>Flávio {r["flavio"]:.1f}%</b></span>'
+    )
+    # desloca para a esquerda a largura estimada da caixinha dos votos válidos (+ um respiro)
+    caixa["xshift"] = -(len(f"Votos válidos · {titulo_validos}") * 6.3 + 14 + 10)
+    return caixa
+
+
 def _serie(
     nome: str,
     x: list[str],
@@ -214,9 +233,13 @@ def grafico_intencao_mensal(med: pd.DataFrame) -> go.Figure:
         secondary_y=True,
     )
     ultimo = med.iloc[-1]  # período mais recente: é o que a caixinha de votos válidos mostra
-    caixa = _caixa_validos(str(ultimo["mes_nome"]), val_l[-1], val_f[-1], y=1.02)
+    titulo = str(ultimo["mes_nome"])
+    caixas = [
+        _caixa_validos(titulo, val_l[-1], val_f[-1], y=1.02),
+        _caixa_resultado(titulo, y=1.02),
+    ]
     fig.update_layout(
-        **_layout(380, hovermode="x unified", margin={"l": 52, "r": 52, "t": 64, "b": 56}, annotations=[caixa])
+        **_layout(380, hovermode="x unified", margin={"l": 52, "r": 52, "t": 64, "b": 56}, annotations=caixas)
     )
     fig.update_xaxes(type="category", showgrid=False, tickangle=0, **_guia_x())
     _eixo_periodos(fig, med, "n_intencao")
@@ -264,37 +287,67 @@ def grafico_rejeicao_mensal(med: pd.DataFrame) -> go.Figure:
 # Placar (visão "todos os meses")
 # ---------------------------------------------------------------------------
 def grafico_placar(df: pd.DataFrame, tipo: str) -> go.Figure:
+    """Placar por período: uma caixinha por pesquisa, coladas lado a lado (Lula, empate e Flávio)."""
     tabela = placar_periodos(df, tipo)  # type: ignore[arg-type]
     nomes = {
         "intencao": ("Lula à frente", "Flávio à frente"),
         "rejeicao": ("Lula mais rejeitado", "Flávio mais rejeitado"),
     }[tipo]
+    estilos = (
+        ("lula", nomes[0], COR_PLACAR_LULA, COR_PLACAR_LULA_LINHA),
+        ("empate", "Empate técnico", COR_PLACAR_EMPATE, COR_PLACAR_EMPATE_LINHA),
+        ("flavio", nomes[1], COR_PLACAR_FLAVIO, COR_PLACAR_FLAVIO_LINHA),
+    )
     fig = go.Figure()
-    for coluna, nome, cor, cor_texto in (
-        ("lula", nomes[0], COR_PLACAR_LULA, "rgba(255,255,255,0.96)"),
-        ("empate", "Empate técnico", COR_PLACAR_EMPATE, "rgba(241,245,249,0.92)"),
-        ("flavio", nomes[1], COR_PLACAR_FLAVIO, "rgba(255,255,255,0.96)"),
-    ):
+    # entradas da legenda (traços vazios): as caixinhas em si não aparecem na legenda
+    for _, nome, cor, linha in estilos:
+        fig.add_trace(
+            go.Bar(
+                y=[tabela["mes_nome"].iloc[0]],
+                x=[None],
+                name=nome,
+                orientation="h",
+                marker={"color": cor, "line": {"color": linha, "width": 1.2}},
+                hoverinfo="skip",
+            )
+        )
+    resumo = [
+        f"{nomes[0]}: {r.lula} · Empate técnico: {r.empate} · {nomes[1]}: {r.flavio}" for r in tabela.itertuples()
+    ]
+    cores: list[list[str]] = []
+    linhas: list[list[str]] = []
+    for r in tabela.itertuples():  # cor da k-ésima caixinha de cada linha: Lula, depois empate, depois Flávio
+        fila = [
+            (cor, linha)
+            for q, (_, _, cor, linha) in zip((r.lula, r.empate, r.flavio), estilos, strict=True)
+            for _ in range(q)
+        ]
+        cores.append([c for c, _ in fila])
+        linhas.append([ln for _, ln in fila])
+    for k in range(int(tabela["total"].max())):
+        existe = [k < len(c) for c in cores]
         fig.add_trace(
             go.Bar(
                 y=tabela["mes_nome"],
-                x=tabela[coluna],
-                name=nome,
+                x=[1 if e else None for e in existe],
                 orientation="h",
-                marker={"color": cor, "line": {"color": "rgba(255,255,255,0.35)", "width": 1.5}},
-                text=[str(v) if v else "" for v in tabela[coluna]],
-                textposition="inside",
-                insidetextanchor="middle",
-                textfont={"color": cor_texto, "size": 12},
-                hovertemplate=f"{nome}: %{{x}}<extra></extra>",
+                showlegend=False,
+                marker={
+                    "color": [c[k] if e else "rgba(0,0,0,0)" for c, e in zip(cores, existe, strict=True)],
+                    "line": {
+                        "color": [ln[k] if e else "rgba(0,0,0,0)" for ln, e in zip(linhas, existe, strict=True)],
+                        "width": 1,
+                    },
+                },
+                customdata=resumo,
+                hovertemplate="%{y}<br>%{customdata}<extra></extra>",
             )
         )
     fig.update_layout(
         **_layout(
-            90 + 36 * len(tabela),
+            90 + 32 * len(tabela),
             barmode="stack",
-            barcornerradius=9,  # pontas arredondadas em cada barra
-            bargap=0.36,
+            bargap=0.3,
             showlegend=True,
             legend={
                 "orientation": "h",
@@ -307,7 +360,7 @@ def grafico_placar(df: pd.DataFrame, tipo: str) -> go.Figure:
             margin={"l": 118, "r": 20, "t": 40, "b": 30},
         )
     )
-    fig.update_yaxes(autorange="reversed", showgrid=False, ticks="", tickfont={"size": 12})
+    fig.update_yaxes(autorange="reversed", showgrid=False, ticks="", tickfont={"size": 12}, automargin=True)
     fig.update_xaxes(
         showgrid=True, gridcolor="rgba(148, 163, 184, 0.14)", zeroline=False, dtick=10, ticks="", tickfont={"size": 11}
     )
@@ -592,8 +645,9 @@ def grafico_instituto(df: pd.DataFrame) -> tuple[go.Figure, dict[str, Any]]:
             "yaxis2.tickvals": list(ei.y2_ticks),
         }
         ultima = gi.iloc[-1]  # pesquisa mais recente do instituto: a caixinha mostra os válidos dela
-        caixa = _caixa_validos(f"última pesquisa ({ultima['data']:%d/%m})", val_l[-1], val_f[-1], y=1.0)
-        rotulos_secao_i = [*rotulos_secao, caixa]
+        titulo = f"última pesquisa ({ultima['data']:%d/%m})"
+        caixa = _caixa_validos(titulo, val_l[-1], val_f[-1], y=1.0)
+        rotulos_secao_i = [*rotulos_secao, caixa, _caixa_resultado(titulo, y=1.0)]
         if len(gr):
             er = eixo_simples(pd.concat([gr["rej_lula"], gr["rej_flavio"]]))
             layout |= {"yaxis3.range": [er.y_min, er.y_max], "yaxis3.dtick": er.passo, "annotations": rotulos_secao_i}
